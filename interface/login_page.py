@@ -1,43 +1,67 @@
+from flask import Flask, request
 import subprocess
-from flask import Flask, render_template_string
-import os
 
 app = Flask(__name__)
 
-html_page = """
-<!DOCTYPE html>
-<html>
-<head>
-<title>AI Secure Login</title>
-</head>
-
-<body style="text-align:center;font-family:Arial">
-
-<h1>AI Secure Login System</h1>
-<h3>Face Recognition Authentication</h3>
-
-<p>Click the button to start face login</p>
-
-<form action="/login">
-<button style="padding:10px 20px;font-size:18px;">
-Start Face Login
-</button>
-</form>
-
-</body>
-</html>
-"""
-
 @app.route("/")
 def home():
-    return render_template_string(html_page)
+    return """
+    <h1>AI Secure Login System</h1>
+
+    <a href="/login">
+        <button>Start Face Login</button>
+    </a>
+
+    <br><br>
+
+    <form action="/register" method="post">
+        <input type="text" name="username" placeholder="Enter Name" required>
+        <button type="submit">Register New User</button>
+    </form>
+
+    <br><br>
+
+    <a href="/logs">
+        <button>View Logs</button>
+    </a>
+    """
 
 @app.route("/login")
 def login():
     subprocess.Popen(
-        ["cmd", "/c", "start", "python", "core\\face_recognition_system.py"],
-        shell=True
+        ["venv\\Scripts\\python", "core\\final_login_system.py"],
+        creationflags=subprocess.CREATE_NO_WINDOW
     )
-    return "<h2>Face recognition started. Check camera.</h2>"
+
+    return """
+    <h2 style="color:green;">AI Secure Login Started</h2>
+    <p>⏳ Initializing AI system...</p>
+    <p>Please look at the camera and follow instructions.</p>
+    """
+
+@app.route("/register", methods=["POST"])
+def register():
+    username = request.form["username"]
+
+    subprocess.Popen(
+        ["venv\\Scripts\\python", "core\\register_user.py", username],
+        creationflags=subprocess.CREATE_NO_WINDOW
+    )
+
+    return f"""
+    <h2>Registering {username}</h2>
+    <p>📷 Camera will open. Please look at the camera.</p>
+    """
+
+@app.route("/logs")
+def logs():
+    try:
+        with open("logs.txt", "r") as f:
+            data = f.read()
+    except:
+        data = "No logs yet"
+
+    return f"<h2>Login Logs</h2><pre>{data}</pre>"
+
 if __name__ == "__main__":
     app.run(debug=True)
